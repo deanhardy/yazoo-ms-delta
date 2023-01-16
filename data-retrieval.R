@@ -19,7 +19,7 @@ alb <- "+proj=aea +lat_1=29.5 +lat_2=45.5 +lat_0=23 +lon_0=-84 +x_0=0 +y_0=0 +el
 
 ## define census year, geography, & variables of interest
 DAT <- 'acs5'
-YR <- 2019
+YR <- 2020
 ST <- c('MS')
 CNTY <- c('Bolivar', 'Carroll', 'Coahoma', 'Desoto', 'Grenada', 'Holmes', 'Humphreys', 'Issaquena', 'Leflore', 'Panola', 
           'Quitman', 'Sharkey', 'Sunflower', 'Tallahatchie', 'Tate', 'Tunica', 'Warren', 'Washington', 'Yazoo')
@@ -64,10 +64,11 @@ bg2 <- bg %>%
 AOI <- st_read(file.path(datadir, '/MAP_generalized_regions/MAP_generalized_regions.shp')) %>%
   st_transform(alb) %>%
   rowid_to_column() %>%
-  mutate(sqkm_aoi = as.numeric(st_area(geometry) / 1e6))
+  mutate(sqkm_aoi = as.numeric(st_area(geometry) / 1e6)) %>%
+  filter(region == 'Delta')
 
 ## interactive map of census data
-tmap_mode(mode = c('view'))
+tmap_mode(mode = c('plot'))
 tm_shape(bg2) + 
   tm_polygons(col = 'medhhinc') + 
 tm_shape(AOI) +
