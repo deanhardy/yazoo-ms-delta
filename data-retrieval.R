@@ -60,6 +60,15 @@ bg2 <- bg %>%
   dplyr::select(GEOID, ALAND, AWATER, sqkm_bg, total, white, black, native_american, asian, hawaiian,
                 other, multiracial, latinx, propPOC, medhhinc, agghhinc, hu, mnhhinc) 
 
+
+st <- get_acs(geography = 'county',
+              state = c('MS'),
+              variables = "B03002_001E",
+              year = 2020,
+              geometry = TRUE,
+              output = 'wide')
+
+
 ##import area of interest data
 AOI <- st_read(file.path(datadir, '/MAP_generalized_regions/MAP_generalized_regions.shp')) %>%
   st_transform(alb) %>%
@@ -69,8 +78,23 @@ AOI <- st_read(file.path(datadir, '/MAP_generalized_regions/MAP_generalized_regi
 
 ## interactive map of census data
 tmap_mode(mode = c('plot'))
-tm_shape(bg2) + 
-  tm_polygons(col = 'medhhinc') + 
-tm_shape(AOI) +
-  tm_borders(col = 'red', lwd = 2)
 
+map <- tm_shape(st) + 
+  tm_polygons(col = 'white') + 
+  tm_shape(AOI) +
+  tm_borders(col = 'red', lwd = 2) + 
+  tm_compass(position = c(0.11,0.12),
+             size = 1.1) +
+  tm_scale_bar(position = 'left',
+               breaks = c(0,50,100),
+               text.size = 0.5) + 
+  tm_layout(inner.margins = c(0.1,0.05,0.05,0.05))
+map
+
+jpeg(paste0(datadir, "/yazoo-map.jpeg"), 
+     units = 'in', 
+     res = 300, 
+     height = 3, 
+     width = 2)
+map
+dev.off()
