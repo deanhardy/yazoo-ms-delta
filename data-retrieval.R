@@ -178,3 +178,25 @@ jpeg(paste0(datadir, "/yazoo-panel.jpeg"),
 tmap_arrange(pop, race, inc, ncol = 3, nrow = 1)
 dev.off()
 
+tmap_mode('view')
+
+## proportion POC map
+race <- tm_shape(st) + 
+  tm_polygons(col = 'propPOC', palette = '-viridis',
+              title = 'Proportion People of Color',
+              # style = 'cont',
+              legend.is.portrait = FALSE) + 
+  tm_shape(AOI) +
+  tm_borders(col = 'red', lwd = 2) + 
+  # tm_compass(size = 1.1,
+  #            position = c('right', 'bottom')) +
+  # tm_scale_bar(position = 'left',
+  #              breaks = c(0,50,100),
+  #              text.size = 0.5) + 
+  tm_layout(inner.margins = c(0.1,0.05,0.05,0.05),
+            # legend.position = c('left', 'BOTTOM'),
+            legend.outside.position = "bottom",
+            legend.outside.size = 0.35,
+            legend.outside = TRUE
+  )
+race
