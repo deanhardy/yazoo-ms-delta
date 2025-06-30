@@ -88,7 +88,7 @@ tmap_mode(mode = c('plot'))
 map <- tm_shape(st) + 
   tm_polygons() + 
   tm_shape(AOI) +
-  tm_borders(col = 'red', lwd = 2) + 
+  tm_borders(col = 'green', lwd = 2) + 
   tm_compass(position = c(0.11,0.12),
              size = 1.1) +
   tm_scale_bar(position = 'left',
