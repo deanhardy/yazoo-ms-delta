@@ -19,7 +19,7 @@ alb <- "+proj=aea +lat_1=29.5 +lat_2=45.5 +lat_0=23 +lon_0=-84 +x_0=0 +y_0=0 +el
 
 ## define census year, geography, & variables of interest
 DAT <- 'acs5'
-YR <- 2020
+YR <- 2024
 ST <- c('MS')
 CNTY <- c('Bolivar', 'Carroll', 'Coahoma', 'Desoto', 'Grenada', 'Holmes', 'Humphreys', 'Issaquena', 'Leflore', 'Panola', 
           'Quitman', 'Sharkey', 'Sunflower', 'Tallahatchie', 'Tate', 'Tunica', 'Warren', 'Washington', 'Yazoo')
@@ -64,7 +64,7 @@ bg2 <- bg %>%
 st <- get_acs(geography = 'county',
               state = c('MS'),
               variables = VAR,
-              year = 2020,
+              year = 2024,
               geometry = TRUE,
               output = 'wide') %>%
   mutate(mnhhinc = agghhinc/hu,
