@@ -68,7 +68,7 @@ st <- get_acs(geography = 'county',
               geometry = TRUE,
               output = 'wide') %>%
   mutate(mnhhinc = agghhinc/hu,
-         propPOC = 1 - (white/total),
+         propPOC = 100*(1 - (white/total)),
          medhhinc = medhhinc/1000,
          sqkm_cnty = as.numeric(st_area(geometry)) / 1e6) %>%
   mutate(popd = total/sqkm_cnty,
@@ -107,65 +107,74 @@ map
 
 ## population map
 pop <- tm_shape(st) + 
-  tm_polygons(col = 'popd', 
-              palette = 'Greys',
-              title = 'Population Density (per KM^2)',
-              # style = 'cont',
-              legend.is.portrait = FALSE) + 
+  tm_polygons(fill = 'popd',
+              fill.scale = tm_scale_continuous(values = "-hcl.blues3"),
+              # fill.scale = tm_scale_intervals(breaks = seq(0, 150, by = 30)),
+              fill.legend = tm_legend(
+                title = 'Population Density (per KM\u00B2)', 
+                orientation = "landscape",
+                position = tm_pos_out("center", "bottom"), 
+                frame = FALSE)
+              ) +
   tm_shape(AOI) +
-  tm_borders(col = 'red', lwd = 2) + 
-  # tm_compass(position = c(0.11,0.12),
-  #            size = 1.1) +
-  # tm_scale_bar(position = c('left', 'bottom'),
-  #              breaks = c(0,100),
-  #              text.size = 0.5) +
+    tm_borders(col = 'red', lwd = 3) + 
   tm_layout(inner.margins = c(0.05,0.05,0.05,0.05),
             # legend.position = c('left', 'BOTTOM'),
             legend.outside.position = "bottom",
             legend.outside.size = 0.35,
-            legend.outside = TRUE
+            legend.outside = TRUE,
+            frame = FALSE
   )
 pop
 
 ## proportion POC map
 race <- tm_shape(st) + 
-  tm_polygons(col = 'propPOC', palette = '-viridis',
-              title = 'Proportion People of Color',
-              # style = 'cont',
-              legend.is.portrait = FALSE) + 
+  tm_polygons(fill = 'propPOC',
+              fill.scale = tm_scale_continuous(values = "-pu_gn"),
+              fill.legend = tm_legend(
+                title = 'People of Color (%)', 
+                orientation = "landscape",
+                position = tm_pos_out("center", "bottom"), 
+                frame = FALSE)
+  ) +
   tm_shape(AOI) +
-  tm_borders(col = 'red', lwd = 2) + 
-  # tm_compass(size = 1.1,
-  #            position = c('right', 'bottom')) +
-  # tm_scale_bar(position = 'left',
-  #              breaks = c(0,50,100),
-  #              text.size = 0.5) + 
+  tm_borders(col = 'red', lwd = 3) + 
   tm_layout(inner.margins = c(0.1,0.05,0.05,0.05),
             # legend.position = c('left', 'BOTTOM'),
               legend.outside.position = "bottom",
               legend.outside.size = 0.35,
-              legend.outside = TRUE
+              legend.outside = TRUE,
+            frame = FALSE
             )
 race
 
 ## median hh income map
 inc <- tm_shape(st) + 
-  tm_polygons(col = 'medhhinc', palette = 'YlOrBr', 
-              title = 'Median Income (x $1000)',
-              # style = 'cont',
-              legend.is.portrait = FALSE) + 
+  tm_polygons(fill = 'medhhinc',
+              fill.scale = tm_scale_continuous(values = "-viridis"),
+              fill.legend = tm_legend(
+                title = 'Median Household Income (x $1000)', 
+                orientation = "landscape",
+                position = tm_pos_out("center", "bottom"), 
+                frame = FALSE,
+                size = 1.5)
+  ) +
   tm_shape(AOI) +
-  tm_borders(col = 'red', lwd = 2) + 
-  tm_compass(position = c('left', 'bottom'),
-             size = 1.1) +
-  tm_scale_bar(position = c('left', 'bottom'),
+  tm_borders(col = 'red', lwd = 3) + 
+  tm_compass(
+    position = c(0.17, 0.2),
+             size = 1.5) +
+  tm_scalebar(
+    # position = c(0, 0.13),
+    position = c('bottom', 'left'),
                breaks = c(0,100),
-               text.size = 0.5) +
+               text.size = 1.5) +
   tm_layout(inner.margins = c(0.05,0.05,0.05,0.05),
             # legend.position = c('left', 'BOTTOM'),
             legend.outside.position = "bottom",
-            legend.outside.size = 0.35,
-            legend.outside = TRUE
+            legend.outside.size = 1.35,
+            legend.outside = TRUE,
+            frame = FALSE
   )
 inc
 
@@ -173,12 +182,12 @@ inc
 jpeg(paste0(datadir, "/yazoo-panel.jpeg"),
      units = 'in',
      res = 300,
-     height = 3.5,
-     width = 6.5)
+     height = 7.4,
+     width = 15.7)
 tmap_arrange(pop, race, inc, ncol = 3, nrow = 1)
 dev.off()
 
-tmap_mode('view')
+ tmap_mode('view')
 
 ## proportion POC map
 race <- tm_shape(st) + 
