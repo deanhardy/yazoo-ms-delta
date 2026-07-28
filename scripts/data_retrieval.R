@@ -66,21 +66,26 @@ bg_acs <- get_acs(geography = "block group",
                  geometry = TRUE,
                  keep_geo_vars = TRUE)
 
-## get block data, which is only available for decennial data
-DEC <- c(2000,2010)
-bl00 <- get_decennial(geography = "block",
-                    variables = SF1,
+## get place data for rolling fork
+pl20 <- get_decennial(geography = "place",
+                    variables = PL20,
                     state = ST,
-                    county = c('Issaquena', 'Sharkey'),
-                    year = 2000,
+                    year = 2020,
                     output = 'wide',
                     geometry = TRUE,
                     keep_geo_vars = TRUE)
 
 
+cnty_acs2 <- cnty_acs %>%
+  st_sf() %>%
+  st_transform(alb) %>%
+  mutate(sqkm_bg = as.numeric(st_area(geometry)) / 1e6, mnhhinc = agghhinc/hu,
+         propPOC = 1 - (white/total)) %>%
+  dplyr::select(NAME.x, GEOID, ALAND, AWATER, sqkm_bg, total, white, black, native_american, asian, hawaiian,
+                other, multiracial, latinx, propPOC, medhhinc, agghhinc, hu, mnhhinc) 
 
 ## tidy BG census data
-bg2 <- bg %>%
+bg2 <- bg_acs %>%
   st_sf() %>%
   st_transform(alb) %>%
   mutate(sqkm_bg = as.numeric(st_area(geometry)) / 1e6, mnhhinc = agghhinc/hu,
