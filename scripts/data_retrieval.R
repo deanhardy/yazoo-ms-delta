@@ -1,14 +1,15 @@
-###################################################
-## data retrieval for exploring census data ##
-###################################################
+#==================================================
+# data retrieval for exploring census data
+#==================================================
 
 rm(list=ls())
 
-## import libraries
+# import libraries
 library(tidyverse)
 library(tidycensus)
 options(tigris_use_cache = TRUE)
 library(sf)
+library(tmap)
 
 v10 <- load_variables(2010, 'sf1')
 v20 <- load_variables(2020, 'pl')
@@ -24,14 +25,9 @@ ST <- c('MS')
 CNTY <- c('Bolivar', 'Carroll', 'Coahoma', 'Desoto', 'Grenada', 'Holmes', 'Humphreys', 'Issaquena', 'Leflore', 'Panola', 
           'Quitman', 'Sharkey', 'Sunflower', 'Tallahatchie', 'Tate', 'Tunica', 'Warren', 'Washington', 'Yazoo')
 
-## ACS data
-DAT <- 'acs5'
-YR <- 2024
-VAR = c(white = "B03002_003E", black = "B03002_004E",
-        native_american = "B03002_005E", asian = "B03002_006E",
-        hawaiian = "B03002_007E", other = "B03002_008E",
-        multiracial = "B03002_009E", latinx = "B03002_012E", total = "B03002_001E",
-        medhhinc = "B19049_001E", agghhinc = "B19025_001E", hu = "B25001_001E")
+#=========================================================
+# Decennial Variable
+#=========================================================
 
 ## 2000-2010 decennial variables
 SF1 = c(white = "P003002", black = "P003003",
@@ -124,9 +120,9 @@ map <- tm_shape(st) +
   tm_borders(col = 'green', lwd = 2) + 
   tm_compass(position = c(0.11,0.12),
              size = 1.1) +
-  tm_scale_bar(position = 'left',
-               breaks = c(0,50,100),
-               text.size = 0.5) + 
+  # tm_scale_bar(position = 'left',
+  #              breaks = c(0,50,100),
+  #              text.size = 0.5) + 
   tm_layout(inner.margins = c(0.1,0.05,0.05,0.05))
 map
 
