@@ -1,7 +1,7 @@
-#==================================================
-# data retrieval for exploring census data
-#==================================================
-
+#===============================================================
+# data retrieval for exploring census data from 2000 to present
+# within a pre-defined area of interest (AOI)
+#===============================================================
 rm(list=ls())
 
 # import libraries
@@ -9,52 +9,88 @@ library(tidyverse)
 library(tidycensus)
 options(tigris_use_cache = TRUE)
 library(sf)
-library(tmap)
-
-v10 <- load_variables(2010, 'sf1')
-v20 <- load_variables(2020, 'pl')
   
-#define data directory
+# define data directory
 datadir <- file.path('/Users/dhardy/Dropbox/r_data/yazoo-ms-delta')
 
-## define equal area projection for area estimates
-alb <- "+proj=aea +lat_1=29.5 +lat_2=45.5 +lat_0=23 +lon_0=-84 +x_0=0 +y_0=0 +ellps=GRS80 +datum=NAD83 +units=m +no_defs" ## http://spatialreference.org/ref/sr-org/albers-conic-equal-area-for-florida-and-georgia/
-
-## define census year, geography, & variables of interest from different census products for MS Delta counties
+#====================================================================
+# define AOI, census year, geography, & explore variables of interest
+#====================================================================
+YR <- seq(2013, 2024, 1) 
 ST <- c('MS')
 CNTY <- c('Bolivar', 'Carroll', 'Coahoma', 'Desoto', 'Grenada', 'Holmes', 'Humphreys', 'Issaquena', 'Leflore', 'Panola', 
           'Quitman', 'Sharkey', 'Sunflower', 'Tallahatchie', 'Tate', 'Tunica', 'Warren', 'Washington', 'Yazoo')
 
-#=========================================================
-# Decennial Variable
-#=========================================================
+v00 <- load_variables(2000, 'sf1')
+v10 <- load_variables(2010, 'sf1')
+v20 <- load_variables(2020, 'dhc')
+v24 <- load_variables(2024, 'acs5')
 
-## 2000-2010 decennial variables
-SF1 = c(white = "P003002", black = "P003003",
+# 2000-2010 decennial variables
+SF1 = c(total = "P003001", white = "P003002", black = "P003003",
         native_american = "P003004", asian = "P003005",
         hawaiian = "P003006", other = "P003007",
-        multiracial = "P003008", latinx = "P005010", total = "P003001",
+        multiracial = "P003008", latinx = "P005010", 
         hu = "H001001")
 
-## 2020 decennial variables
-PL20 = c(white = "P1_003N", black = "P1_004N",
-           native_american = "P1_005N", asian = "P1_006N",
-           hawaiian = "P1_007N", other = "P1_008N",
-           multiracial = "P1_009N", latinx = "P2_002N", total = "P1_001N")
+# 2020 decennial variables
+DHC20 = c(total = "P8_001N", white = "P8_003N", black = "P8_004N",
+           native_american = "P8_005N", asian = "P8_006N",
+           hawaiian = "P8_007N", other = "P8_008N",
+           multiracial = "P8_009N", latinx = "P8_002N", 
+          hu = 'H1_001N')
 
-## get county level data
-cnty_acs <- get_acs(geography = "county",
-               variables = VAR,
-               state = ST,
-               county = CNTY,
-               year = YR,
-               output = 'wide',
-               geometry = TRUE,
-               keep_geo_vars = TRUE)
+# acs 5-yr variables
+ACS5 = c(total = "B03002_001", white = "B03002_003", black = "B03002_004",
+         native_american = "B03002_005", asian = "B03002_006",
+         hawaiian = "B03002_007", other = "B03002_008",
+         multiracial = "B03002_009", latinx = "B03002_012", 
+         hu = "B25001_001", medhhinc = "B19049_001", agghhinc = "B19025_001")
+
+#====================================================================
+# for loop to assess block group demographic changes of site 
+# over assigned time period 
+#====================================================================
+df <- NULL
+
+for (i in 1:length(YR)) {
+  OUT <- get_acs(geography = 'block group',
+                 variables = ACS5,
+                 state = ST,
+                 # year = YR[[i]],
+                 year = 2024,
+                 county = CNTY,
+                 output = 'wide',
+                 geometry = TRUE,
+                 keep_geo_vars = TRUE,
+                 cache_table = TRUE) %>%
+    st_transform(4326) %>%
+    mutate(sqkm_bg = as.numeric(st_area(geometry)) / 1e6, mnhhincE = agghhincE/huE,
+           propPOCE = 1 - (whiteE/totalE))
+    # dplyr::select(GEOID, ALAND, AWATER, sqkm_bg, total, white, black, native_american, asian, hawaiian,
+    #               other, multiracial, latinx, propPOC, medhhinc, agghhinc, hu, mnhhinc)
+  
+  df <- rbind(df, OUT)
+}
+  
+  
+
+cnty_dec <- 
+  get_decennial(
+    geography = "county",
+    variables = DHC20,
+    state = ST,
+    county = CNTY,
+    year = YR,
+    sumfile = 'dhc',
+    output = 'wide',
+    geometry = TRUE,
+    keep_geo_vars = TRUE
+    )
 
 ## get block group data 
 bg_acs <- get_acs(geography = "block group",
-                 variables = 	VAR,
+                 variables = VAR,
                  state = ST,
                  county = CNTY,
                  year = YR,
