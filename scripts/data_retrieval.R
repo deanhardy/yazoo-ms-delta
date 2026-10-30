@@ -7,6 +7,7 @@ rm(list=ls())
 # import libraries
 library(tidyverse)
 library(tidycensus)
+library(tigris)
 options(tigris_use_cache = TRUE)
 library(sf)
   
@@ -21,10 +22,10 @@ ST <- c('MS')
 CNTY <- c('Bolivar', 'Carroll', 'Coahoma', 'Desoto', 'Grenada', 'Holmes', 'Humphreys', 'Issaquena', 'Leflore', 'Panola', 
           'Quitman', 'Sharkey', 'Sunflower', 'Tallahatchie', 'Tate', 'Tunica', 'Warren', 'Washington', 'Yazoo')
 
-v00 <- load_variables(2000, 'sf1')
-v10 <- load_variables(2010, 'sf1')
-v20 <- load_variables(2020, 'dhc')
-v24 <- load_variables(2024, 'acs5')
+# v00 <- load_variables(2000, 'sf1')
+# v10 <- load_variables(2010, 'sf1')
+# v20 <- load_variables(2020, 'dhc')
+# v24 <- load_variables(2024, 'acs5')
 
 # 2000-2010 decennial variables
 SF1 = c(total = "P003001", white = "P003002", black = "P003003",
@@ -47,6 +48,20 @@ ACS5 = c(total = "B03002_001", white = "B03002_003", black = "B03002_004",
          multiracial = "B03002_009", latinx = "B03002_012", 
          hu = "B25001_001", medhhinc = "B19049_001", agghhinc = "B19025_001")
 
+
+#====================================================================
+# import AOI boundary & ancillary data
+#====================================================================
+AOI <- st_read(file.path(datadir, 'spatial/lwr_yazoo_basin')) %>%
+  mutate(sqkm_site = as.numeric(st_area(geometry) / 1e6)) %>%
+  st_transform(4326)
+
+rd <- primary_roads(year = 2024) %>%
+  filter(RTTYP == 'I')
+urban <-urban_areas(year = '2020')
+cnty <- counties(state = 'MS')
+cnty_list <- list_counties('MS')
+
 #====================================================================
 # for loop to assess block group demographic changes of site 
 # over assigned time period 
@@ -57,8 +72,8 @@ for (i in 1:length(YR)) {
   OUT <- get_acs(geography = 'block group',
                  variables = ACS5,
                  state = ST,
-                 # year = YR[[i]],
-                 year = 2024,
+                 year = YR[[i]],
+                 # year = 2024,
                  county = CNTY,
                  output = 'wide',
                  geometry = TRUE,
@@ -66,15 +81,34 @@ for (i in 1:length(YR)) {
                  cache_table = TRUE) %>%
     st_transform(4326) %>%
     mutate(sqkm_bg = as.numeric(st_area(geometry)) / 1e6, mnhhincE = agghhincE/huE,
-           propPOCE = 1 - (whiteE/totalE))
-    # dplyr::select(GEOID, ALAND, AWATER, sqkm_bg, total, white, black, native_american, asian, hawaiian,
-    #               other, multiracial, latinx, propPOC, medhhinc, agghhinc, hu, mnhhinc)
+           propPOCE = 1 - (whiteE/totalE),
+           year = YR[[i]]
+           ) %>%
+    dplyr::select(year, GEOID, ALAND, AWATER, sqkm_bg, totalE, whiteE, blackE, native_americanE, asianE, hawaiianE,
+                  otherE, multiracialE, latinxE, propPOCE, huE, medhhincE, agghhincE, mnhhincE)
   
   df <- rbind(df, OUT)
 }
-  
+
+
+#====================================================================
+# plot map of data
+#====================================================================
+ggplot() + 
+  geom_sf(data = filter(df, year == 2024), aes(fill = 100*propPOCE)) + 
+  geom_sf(data = cnty, color = 'black', linewidth = 0.5) + 
+  geom_sf(data = AOI, color = 'orange', linewidth = 1) + 
+  scale_fill_distiller(palette = "RdPu", 
+                       direction = 1) + 
+  labs(title = "People of Color by Block Group, 2024",
+       caption = "Data source: 2024 5-year ACS, US Census Bureau",
+       fill = "Percentage") + 
+  theme_void()
   
 
+#====================================================================
+# OLD
+#====================================================================
 cnty_dec <- 
   get_decennial(
     geography = "county",
